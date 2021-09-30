@@ -2,6 +2,7 @@
 
 import ctypes
 import ctypes.wintypes
+import win32com.client
 import win32con
 import time
 import win32gui
@@ -126,6 +127,15 @@ GlobalHotKeys._include_defined_vks()
 GlobalHotKeys._include_alpha_numeric_vks()
 
 
+# @Override SetForegroundWindow()
+# https://programmer.help/blogs/python-win32gui-calls-the-window-to-the-front.html
+shell = win32com.client.Dispatch("WScript.Shell")
+def SetAsForegroundWindow(hwnd):
+    # send ALT
+    shell.SendKeys('%')
+    win32gui.SetForegroundWindow(hwnd)
+
+
 class translationThread(threading.Thread):
     def __init__(self, text, server):
         threading.Thread.__init__(self)
@@ -136,9 +146,9 @@ class translationThread(threading.Thread):
         try:
             a = trans(text, inifile.get('Translator', 'from'),
                       inifile.get('Translator', 'to'), server)
-            print('\n%s：%s' % (server, a))
+            print('\n%s: %s' % (server, a))
         except:
-            print(server + '：我抽风了，请重试！')
+            pass
 
     def run(self):  # 定义每个线程要运行的函数
         self.fun1(self.text, self.server)
@@ -148,9 +158,9 @@ class translationThread(threading.Thread):
 def show(text):
     try:
         hwnd = win32gui.FindWindow(None, win32api.GetConsoleTitle())
-        win32gui.SetForegroundWindow(hwnd)  # show window
+        SetAsForegroundWindow(hwnd)
     except:
-        pass
+        print('Fail to pop')
 
     t1 = translationThread(text, inifile.get('Service', 'trabox1'))
     t2 = translationThread(text, inifile.get('Service', 'trabox2'))
@@ -163,20 +173,20 @@ def show(text):
 # 划词翻译
 @GlobalHotKeys.register(GlobalHotKeys.VK_A, GlobalHotKeys.MOD_ALT)
 def shift_f1():
-    print('\n开始进行划词翻译')
+    print('\nStart crossword translation')
     try:
         text = copy_clipboard()
-        print('原文：' + text + '\n')
+        print('Original：' + text + '\n')
         show(text)
 
     except:
-        print('\n未获取到文本')
+        print('\nNo text was obtained')
 
 
 # 截图翻译
 @GlobalHotKeys.register(GlobalHotKeys.VK_S, GlobalHotKeys.MOD_ALT)
 def shift_f2():
-    print('\n开始进行截图翻译')
+    print('\nStart screenshot translation')
     win32clipboard.OpenClipboard()
     win32clipboard.EmptyClipboard()
     # try:
@@ -185,37 +195,39 @@ def shift_f2():
     try:
         text = ocr(appData + '/Sponge/paste.png', inifile.get('Translator', 'from'),
                    inifile.get('Service', 'ocrserver'))
-        print('原文：' + text)
+        print('Original：' + text)
         show(text)
         os.remove(appData + '/Sponge/paste.png')
 
     except:
-        print('ocr时出现了未知错误，请再试一次')
+        print('An unknown error occurred at OCR. Please try again')
 
 
 # 输入翻译
 @GlobalHotKeys.register(GlobalHotKeys.VK_D, GlobalHotKeys.MOD_ALT)
 def shift_f3():
-    text = input('\n请输入原文：')
+    print('\nStart enter translation')
+    text = input('\nPlease enter original text: ')
     show(text)
 
 
 # 大声朗读
 @GlobalHotKeys.register(GlobalHotKeys.VK_R, GlobalHotKeys.MOD_ALT)
 def shift_f4():
-    print('\n开始朗读')
+    print('\nRead aloud selection')
     try:
         text = copy_clipboard()
-        print('朗读以下内容：' + text)
+        print('Read：' + text)
         tts(text, 'en-US', 'localtts')
 
     except:
-        print('\n未获取到文本')
+        print('\nNo text was obtained')
 
 
 # 退出
 @GlobalHotKeys.register(GlobalHotKeys.VK_Q, GlobalHotKeys.MOD_ALT)
 def shift_f5():
+    print('Bye ( ͡° ͜ʖ ͡°)')
     import sys
     sys.exit()
 
