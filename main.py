@@ -135,6 +135,7 @@ def SetAsForegroundWindow(hwnd):
     shell.SendKeys('%')
     win32gui.SetForegroundWindow(hwnd)
 
+
 class translationThread(threading.Thread):
     def __init__(self, text, server):
         threading.Thread.__init__(self)
@@ -155,16 +156,12 @@ class translationThread(threading.Thread):
 
 
 def show(text):
-    hwnd = win32gui.FindWindow(None, win32api.GetConsoleTitle())  #not working on windows 11
-
-    # hwnd = win32gui.FindWindow(None, 'cmd - s')
-    # SetAsForegroundWindow(hwnd)
+    hwnd = win32gui.FindWindow(None, win32api.GetConsoleTitle())
     try:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
         SetAsForegroundWindow(hwnd)
     except:
-        print('Fail to Foreground Window')
-        print(hwnd)
+        print('Fail to pop window')
     t1 = translationThread(text, inifile.get('Service', 'trabox1'))
     t2 = translationThread(text, inifile.get('Service', 'trabox2'))
     t3 = translationThread(text, 'deepl')
@@ -222,8 +219,6 @@ def shift_f4():
         text = copy_clipboard()
         print('Read：' + text)
         tts(text, 'en-US', 'localtts')
-        hwnd = win32gui.FindWindow(None, 'cmd - s')
-        SetAsForegroundWindow(hwnd)
 
     except:
         print('\nNo text was obtained')
