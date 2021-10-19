@@ -317,7 +317,7 @@ def tts(text, target, server):
 
 if __name__ == '__main__':
     from time import ctime, sleep
-    a = ocr('get_the_text\ocr\ocrtest.png', 'Auto', 'tesseract')
+    a = ocr('get_the_text/ocr/ocrtest.png', 'Auto', 'tesseract')
 
     print('原文为:' + a)
 
