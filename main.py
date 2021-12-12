@@ -20,7 +20,7 @@ inifile = configparser.ConfigParser()
 inifile.read(os.getenv('APPDATA') + '/Sponge/config.ini', 'UTF-8')
 appData = os.getenv('APPDATA')
 
-# 尝试置顶
+
 
 class GlobalHotKeys(object):
     """
@@ -83,7 +83,8 @@ class GlobalHotKeys(object):
                         'Unable to register hot key: ' + str(vk) + ' error code is: ' + str(
                             ctypes.windll.kernel32.GetLastError()))
         except:
-            print('Shortcut key conflict')
+            print('Unable to start, shortcut key conflict\n无法运行，快捷键冲突')
+            time.sleep(10)
             import sys
             sys.exit()
 
@@ -127,13 +128,20 @@ GlobalHotKeys._include_defined_vks()
 GlobalHotKeys._include_alpha_numeric_vks()
 
 
+# 尝试置顶
+hwnd = win32gui.FindWindow(None, 'Sponge')
 # @Override SetForegroundWindow()
 # https://programmer.help/blogs/python-win32gui-calls-the-window-to-the-front.html
-shell = win32com.client.Dispatch("WScript.Shell")
-def SetAsForegroundWindow(hwnd):
+# shell = win32com.client.Dispatch("WScript.Shell")
+# def SetAsForegroundWindow(hwnd):
+def SetAsForegroundWindow():
     # send ALT
-    shell.SendKeys('%')
-    win32gui.SetForegroundWindow(hwnd)
+    # shell.SendKeys('%')
+    # win32gui.SetForegroundWindow(hwnd)
+
+    # # fixme 临时解决方案，急需修复！！！
+    # hwnd = win32gui.FindWindow(None, 'Sponge')
+    win32gui.SetForegroundWindow(hwnd)  # show window
 
 
 class translationThread(threading.Thread):
@@ -156,10 +164,12 @@ class translationThread(threading.Thread):
 
 
 def show(text):
-    hwnd = win32gui.FindWindow(None, win32api.GetConsoleTitle())
+    # hwnd = win32gui.FindWindow(None, win32api.GetConsoleTitle())
+    # print(hwnd)
     try:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-        SetAsForegroundWindow(hwnd)
+        SetAsForegroundWindow()
+        # SetAsForegroundWindow(hwnd)
     except:
         print('Fail to pop window')
     t1 = translationThread(text, inifile.get('Service', 'trabox1'))
@@ -195,9 +205,9 @@ def shift_f2():
     try:
         text = ocr(appData + '/Sponge/paste.png', inifile.get('Translator', 'from'),
                    inifile.get('Service', 'ocrserver'))
-        print('Original：' + text)
-        show(text)
         os.remove(appData + '/Sponge/paste.png')
+        print('Original：' + text + '\n')
+        show(text)
 
     except:
         print('An unknown error occurred at OCR. Please try again')
@@ -206,32 +216,42 @@ def shift_f2():
 # 输入翻译
 @GlobalHotKeys.register(GlobalHotKeys.VK_D, GlobalHotKeys.MOD_ALT)
 def shift_f3():
+    hwnd = win32gui.FindWindow(None, win32api.GetConsoleTitle())
+    try:
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        SetAsForegroundWindow()
+        # SetAsForegroundWindow(hwnd)
+    except:
+        print('Fail to pop window -f3')
+
     print('\nStart enter translation')
     text = input('\nPlease enter original text: ')
     show(text)
 
 
-# 大声朗读
-@GlobalHotKeys.register(GlobalHotKeys.VK_W, GlobalHotKeys.MOD_ALT)
+# Read aloud
+@GlobalHotKeys.register(GlobalHotKeys.VK_Q, GlobalHotKeys.MOD_ALT)
 def shift_f4():
     print('\nRead aloud selection')
     try:
         text = copy_clipboard()
         print('Read：' + text)
-        tts(text, 'en-US', 'localtts')
+        # tts(text, 'English', 'localtts')
+        # tts(text, 'en-US', 'localtts')
+        tts(text, 'English', inifile.get('Service', 'ttsserver'))
 
     except:
         print('\nNo text was obtained')
 
 
-# 退出
-@GlobalHotKeys.register(GlobalHotKeys.VK_Q, GlobalHotKeys.MOD_ALT)
-def shift_f5():
-    print('Bye ( ͡° ͜ʖ ͡°)')
-    import sys
-    sys.exit()
+# quit
+# @GlobalHotKeys.register(GlobalHotKeys.VK_Q, GlobalHotKeys.MOD_ALT)
+# def shift_f5():
+#     print('Bye ( ͡° ͜ʖ ͡°)')
+#     import sys
+#     sys.exit()
 
 
 if __name__ == "__main__":
-    print("listening")
+    print("Sponge - https://github.com/JamesW99/Sponge")
     GlobalHotKeys.listen()
